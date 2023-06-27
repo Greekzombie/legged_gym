@@ -378,9 +378,11 @@ class LeggedRobot(BaseTask):
             return super().get_privileged_observations()
 
     def compute_observations(self):
-        """ Computes observations
+        """ Computes observations. This is the input into the policy neural network
         """
         # not modifying the buffer in-place is intended
+        # IF I MODIFY LENGTH OF INPUT INTO NEURAL NETWORK I HAVE TO BE CAREFUL TO MODIFY OTHER THINGS IN THE CODE. FOR EXAMPLE,
+        # "self.num_obs" and "self._get_noise_scale_vec()".
         self.obs_buf = torch.cat((  self.base_lin_vel * self.obs_scales.lin_vel,
                                     self.base_ang_vel  * self.obs_scales.ang_vel,
                                     self.projected_gravity,
@@ -666,7 +668,7 @@ class LeggedRobot(BaseTask):
         noise_vec[9:12] = 0. # commands
         noise_vec[12:24] = noise_scales.dof_pos * noise_level * self.obs_scales.dof_pos
         noise_vec[24:36] = noise_scales.dof_vel * noise_level * self.obs_scales.dof_vel
-        noise_vec[36:48] = 0. # previous actions
+        noise_vec[36:48] = 0. # previous actions the robot took
 
         i = 48
         if self.cfg.terrain.measure_heights:

@@ -8,7 +8,7 @@ FL_HAA = 'FL_hip_joint' # hip AA (abduction/adduction)
 FL_HFE = 'FL_thigh_joint' # hip FE (flexion/extension)
 FL_KFE = 'FL_calf_joint' # knee FE
 
-FR_HAA = 'FR_hip_joint' # front right test
+FR_HAA = 'FR_hip_joint' # front right test test test
 FR_HFE = 'FR_thigh_joint'
 FR_KFE = 'FR_calf_joint'
 
@@ -25,8 +25,8 @@ MEASURE_HEIGHTS = True # this impacts several params
 
 class Solo12Cfg( LeggedRobotCfg ):
     class env( LeggedRobotCfg.env):
-        num_actions = 12
-        num_envs = 4096
+        num_actions = 12    # Number of actions robot can perform. In this case, the SOLO robot has 12 DOF, one in each leg
+        num_envs = 4096     # Number of robots present at the same time
 
     class terrain( LeggedRobotCfg.terrain ):
         mesh_type = 'trimesh'
@@ -34,9 +34,10 @@ class Solo12Cfg( LeggedRobotCfg ):
         curriculum = True
         measure_heights = MEASURE_HEIGHTS
         horizontal_scale = 0.05 # [m]
-        horizontal_difficulty_scale = 0.5
+        horizontal_difficulty_scale = 0.5 
+        # We can modify terrain types depending on what we want to train robot on.
        #  terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete, stepping stones, gap, pit]
-        terrain_proportions = [0.05,      0.1,           0.15,        0.15,      0.15,        0.3,        0.05, 0.05]
+        terrain_proportions = [1,          0,           0,        0,             0,        0,        0, 0]
       
         measured_points_x = np.arange(-0.8, 0.805, 0.05).tolist() # 0.8mx1.2m rectangle (without center line)
         measured_points_y = np.arange(-0.5, 0.505, 0.05).tolist()
