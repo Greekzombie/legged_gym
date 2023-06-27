@@ -8,7 +8,7 @@ FL_HAA = 'FL_hip_joint' # hip AA (abduction/adduction)
 FL_HFE = 'FL_thigh_joint' # hip FE (flexion/extension)
 FL_KFE = 'FL_calf_joint' # knee FE
 
-FR_HAA = 'FR_hip_joint' # front right
+FR_HAA = 'FR_hip_joint' # front right test
 FR_HFE = 'FR_thigh_joint'
 FR_KFE = 'FR_calf_joint'
 
