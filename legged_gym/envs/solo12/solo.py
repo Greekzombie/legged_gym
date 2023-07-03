@@ -62,12 +62,19 @@ class Solo12(LeggedRobot):
     # --- rewards (see paper) ---
 
     def _reward_velocity(self):
+        """
+        Rewards robot for going at the speed set by the virtual joystick of the user. 
+        """
         v_speed = torch.hstack((self.base_lin_vel[:, :2], self.base_ang_vel[:, 2:3]))
         vel_error = torch.sum(torch.square(self.commands[:, :3] - v_speed), dim=1)
         return torch.exp(-vel_error)
     
     def _reward_foot_clearance(self):
-        feet_z = self.get_feet_height()
+        """
+        Unsure how it is implemented. What it is trying to do is reward robot for lifting its foot high off the ground 
+        when walking. 
+        """
+        feet_z = self.get_feet_height()  # Get height of feet from ground
         height_err = torch.square(feet_z - self.cfg.control.feet_height_target)
         feet_speed = torch.sum(torch.square(self.body_state[:, self.feet_indices, 7:9]), dim=2)
         return torch.sum(height_err * torch.sqrt(feet_speed), dim=1)
@@ -77,8 +84,24 @@ class Solo12(LeggedRobot):
         speed = torch.sum(torch.square(self.body_state[:, self.feet_indices, 7:9]), dim=2)
 
         return torch.sum(self.filtered_feet_contacts * speed, dim=1)
+
+    def _reward_test(self):
+        """
+        In order to define a new reward function called "test" we first have to define the reward scale in the "scales()" function 
+        in the "solo12_config.py" file.
+        """
+        return 0
     
     def _reward_vel_z(self):
+        """
+        Rewards the robot if its base has a high linear velocity. 
+
+        As reward has to be scalar, "base_lin_vel" must be tensor where the first dimension only has one component. 
+
+        We could encourage jumping by rewarding the robot if its base has a high linear velocity in the upwards direction.
+        To see what direction up is, we can have a look at the gravity vector. 
+
+        """
         r = torch.square(self.base_lin_vel[:, 2])
         return r
    

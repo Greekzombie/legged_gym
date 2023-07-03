@@ -680,7 +680,7 @@ class LeggedRobot(BaseTask):
         return noise_vec
 
     #----------------------------------------
-    def _init_buffers(self):
+    def _init_buffers(self):    # IMPORTANT FUNCTION
         """ Initialize torch tensors which will contain simulation states and processed quantities
         """
         # get gym GPU state tensors
@@ -752,6 +752,7 @@ class LeggedRobot(BaseTask):
             # foot origin: (t, x, y, z) when/where the foot was on the ground for the last time
             self.feet_origin = torch.zeros(self.num_envs, len(self.feet_indices), 4, dtype=torch.float, device=self.device, requires_grad=False)
             self.last_feet_origin = torch.zeros_like(self.feet_origin)
+            # Contains tensor which tells us with a boolean what feet are on the ground at the moment. 
             self.feet_on_ground = torch.zeros(self.num_envs, len(self.feet_indices), dtype=torch.bool, device=self.device, requires_grad=False)
             
             if self.trace_gait_phases:

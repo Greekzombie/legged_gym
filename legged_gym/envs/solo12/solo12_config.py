@@ -108,6 +108,8 @@ class Solo12Cfg( LeggedRobotCfg ):
             termination = -0
             step_forecast = -0
 
+            test = 0
+
     class commands( LeggedRobotCfg.commands ):
         class curriculum( LeggedRobotCfg.commands.curriculum ):
             enabled = False

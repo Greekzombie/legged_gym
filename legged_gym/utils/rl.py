@@ -88,7 +88,7 @@ class StepEstimatorActorCritic(ActorCritic):
     def __init__(self,  num_actor_obs,
                         num_critic_obs,
                         num_actions,
-                        actor_hidden_dims=[256, 256, 256],
+                        actor_hidden_dims=[256, 256, 256],    # Here we define the number of neurons for the actor, critic and estimator
                         critic_hidden_dims=[256, 256, 256],
                         estimator_hidden_dims=[256, 256, 256],
                         activation='elu',
