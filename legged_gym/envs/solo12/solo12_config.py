@@ -89,6 +89,11 @@ class Solo12Cfg( LeggedRobotCfg ):
             interpolation = 1.5
         
         class scales( ):
+            """
+            Defines the weight of each reward we have introduced at the end of the "solo.py" file. If we look at the "cassie_config.py"
+            file, scales() inherits from "LeggedRobotCfg.rewards.scales". Here, we are not doing that. What I think that means is that 
+            the reward functions introduced in legged robot are not used for the SOLO robot. We only use those defined in "solo.py".
+            """
 
             tracking_lin_vel = 6. # c_vel
             tracking_ang_vel = 6.
@@ -108,7 +113,7 @@ class Solo12Cfg( LeggedRobotCfg ):
             termination = -0
             step_forecast = -0
 
-            test = 0
+            test = 0.
 
     class commands( LeggedRobotCfg.commands ):
         class curriculum( LeggedRobotCfg.commands.curriculum ):

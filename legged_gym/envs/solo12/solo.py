@@ -86,20 +86,24 @@ class Solo12(LeggedRobot):
         return torch.sum(self.filtered_feet_contacts * speed, dim=1)
 
     def _reward_test(self):
-        """
+        """P
         In order to define a new reward function called "test" we first have to define the reward scale in the "scales()" function 
         in the "solo12_config.py" file.
         """
-        return 0
+        r = self.base_lin_vel[:, 2]
+        return r
     
     def _reward_vel_z(self):
-        """
+        """P
         Rewards the robot if its base has a high linear velocity. 
 
         As reward has to be scalar, "base_lin_vel" must be tensor where the first dimension only has one component. 
 
         We could encourage jumping by rewarding the robot if its base has a high linear velocity in the upwards direction.
         To see what direction up is, we can have a look at the gravity vector. 
+
+        base_lin_vel[0] is linear velocity in the forwards/backwards direction. If it is equal to -2, this means robot is moving backwards.
+        base_lin_vel[1] is linear velocity in the lateral direction.
 
         """
         r = torch.square(self.base_lin_vel[:, 2])
