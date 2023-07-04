@@ -168,6 +168,7 @@ class Solo12Cfg( LeggedRobotCfg ):
     def eval(self):
         super().eval()
         self.viewer.follow_env = True
+        # IF I UNCOMMENT THESE COMMANDS ARE NOT ALLOWED. PLAY.PY DOES NOT WORK WELL WITH THIS
         #self.commands.ranges.lin_vel_x = [0.,0.]
         #self.commands.ranges.lin_vel_y = [0,0]
         #self.env.num_envs = 1
