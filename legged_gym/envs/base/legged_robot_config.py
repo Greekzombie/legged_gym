@@ -182,7 +182,7 @@ class LeggedRobotCfg(BaseConfig):
             torques = -0.00001
             dof_vel = -0.
             dof_acc = -2.5e-7
-            base_height = -0. - 10  # Positive base_height makes robots crouch. Negativa base_height makes robots stand tall but not jump
+            base_height = -0. - 50  #P Positive base_height makes robots crouch. Negative base_height makes robots stand tall but not jump
             feet_air_time =  1.0
             collision = -1.
             feet_stumble = -0.0 
@@ -203,7 +203,7 @@ class LeggedRobotCfg(BaseConfig):
         soft_dof_pos_limit = 1. # percentage of urdf limits, values above this limit are penalized
         soft_dof_vel_limit = 1.
         soft_torque_limit = 1.
-        base_height_target = 1.
+        base_height_target = 1.   
         max_contact_force = 100. # forces above this value are penalized
         height_estimation = AVERAGE_MEASUREMENT # should use FEET_ORIGIN if the terrain has gaps
 

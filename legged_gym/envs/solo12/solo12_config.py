@@ -89,10 +89,17 @@ class Solo12Cfg( LeggedRobotCfg ):
             interpolation = 1.5
         
         class scales( ):
-            """
+            """P
             Defines the weight of each reward we have introduced at the end of the "solo.py" file. If we look at the "cassie_config.py"
-            file, scales() inherits from "LeggedRobotCfg.rewards.scales". Here, we are not doing that. What I think that means is that 
-            the reward functions introduced in legged robot are not used for the SOLO robot. We only use those defined in "solo.py".
+            file, scales() inherits from "LeggedRobotCfg.rewards.scales". Here, we are not doing that. What this means is that the scales
+            introduced in "legged_robot" are not used. 
+
+            Given the available scales the "_prepare_reward_function()" matches the scales to defined reward functions. Even in the case
+            where scales doesn't inherit from "LeggedRobotCfg.rewards.scales", Solo12 class can still access these reward functions as it
+            was defined as
+            
+                                class Solo12(LeggedRobot):
+            
             """
 
             tracking_lin_vel = 6. # c_vel
@@ -108,12 +115,15 @@ class Solo12Cfg( LeggedRobotCfg ):
             smoothness_2 = -1.5 # -c_a2
 
             collision = -1.
-            base_height = -2.
+            #base_height = -2. 
 
             termination = -0
             step_forecast = -0
 
+            # I have modified these reward functions.
             test = 0.
+            torques = -2
+            base_height = -20.  #P Positive base_height makes robots crouch. Negative base_height makes robots stand tall but not jump
 
     class commands( LeggedRobotCfg.commands ):
         class curriculum( LeggedRobotCfg.commands.curriculum ):
