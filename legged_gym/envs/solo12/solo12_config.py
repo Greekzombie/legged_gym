@@ -29,7 +29,7 @@ class Solo12Cfg( LeggedRobotCfg ):
         num_envs = 4096     # Number of robots present at the same time
 
     class terrain( LeggedRobotCfg.terrain ):
-        mesh_type = 'trimesh'
+        mesh_type = 'trimesh'    # plane
         steps_height_scale = 0.5
         curriculum = True
         measure_heights = MEASURE_HEIGHTS
@@ -121,9 +121,9 @@ class Solo12Cfg( LeggedRobotCfg ):
             step_forecast = -0
 
             # I have modified these reward functions.
-            test = 0.
-            torques = -2
-            base_height = -20.  #P Positive base_height makes robots crouch. Negative base_height makes robots stand tall but not jump
+            test = 0.0
+            torques = -1.
+            base_height = -5.  #P Positive base_height makes robots crouch. Negative base_height makes robots stand tall but not jump
 
     class commands( LeggedRobotCfg.commands ):
         class curriculum( LeggedRobotCfg.commands.curriculum ):
@@ -168,11 +168,11 @@ class Solo12Cfg( LeggedRobotCfg ):
     def eval(self):
         super().eval()
         self.viewer.follow_env = True
-        self.commands.ranges.lin_vel_x = [0.,0.]
-        self.commands.ranges.lin_vel_y = [0,0]
-        self.env.num_envs = 1
-        self.commands.ranges.ang_vel_yaw = [0,0]
-        self.commands.ranges.heading = [0,0]
+        #self.commands.ranges.lin_vel_x = [0.,0.]
+        #self.commands.ranges.lin_vel_y = [0,0]
+        #self.env.num_envs = 1
+        #self.commands.ranges.ang_vel_yaw = [0,0]
+        #self.commands.ranges.heading = [0,0]
 
 class Solo12CfgPPO( LeggedRobotCfgPPO ):
 
@@ -182,7 +182,7 @@ class Solo12CfgPPO( LeggedRobotCfgPPO ):
         resume = False
         load_run = -1 # -1 = last run
         checkpoint = -1 # -1 = last saved model
-        max_iterations = 10000
+        max_iterations = 100000
 
     class algorithm( LeggedRobotCfgPPO.algorithm ):
         learning_rate = Default() #0.005 #requested in the paper, but not working at all...
