@@ -39,6 +39,7 @@ class Solo12Cfg( LeggedRobotCfg ):
        #  terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete, stepping stones, gap, pit]
         terrain_proportions = [1,          0,           0,        0,             0,        0,        0, 0]
       
+        #P Defines how many points we sample around the robot. A meshgrid is created that measures   
         measured_points_x = np.arange(-0.8, 0.805, 0.05).tolist() # 0.8mx1.2m rectangle (without center line)
         measured_points_y = np.arange(-0.5, 0.505, 0.05).tolist()
 
