@@ -184,7 +184,7 @@ class Solo12CfgPPO( LeggedRobotCfgPPO ):
         resume = False
         load_run = -1 # -1 = last run
         checkpoint = -1 # -1 = last saved model
-        max_iterations = 100000
+        max_iterations = 10000
 
     class algorithm( LeggedRobotCfgPPO.algorithm ):
         learning_rate = Default() #0.005 #requested in the paper, but not working at all...
