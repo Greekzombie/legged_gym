@@ -378,7 +378,7 @@ class LeggedRobot(BaseTask):
             return super().get_privileged_observations()
 
     def compute_observations(self):
-        """P Computes observations. This is the input into the policy neural network
+        """PP Computes observations. This is the input into the policy neural network
 
         not modifying the buffer in-place is intended
         IF I MODIFY LENGTH OF INPUT INTO NEURAL NETWORK I HAVE TO BE CAREFUL TO MODIFY OTHER THINGS IN THE CODE. FOR EXAMPLE,
@@ -399,7 +399,8 @@ class LeggedRobot(BaseTask):
                                     self.dof_vel * self.obs_scales.dof_vel,
                                     self.actions
                                     ),dim=-1)
-        # add perceptive inputs if not blind        
+        # add perceptive inputs if not blind  
+        # root_states is of size (batch_size, N)      
         if self.measure_heights:
             clip = self.cfg.normalization.clip_measurements
             heights = (self.root_states[:, 2].unsqueeze(1) - self.cfg.rewards.base_height_target - self.measured_heights) 
