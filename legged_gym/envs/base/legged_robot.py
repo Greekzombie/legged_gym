@@ -378,11 +378,19 @@ class LeggedRobot(BaseTask):
             return super().get_privileged_observations()
 
     def compute_observations(self):
-        """ Computes observations. This is the input into the policy neural network
+        """P Computes observations. This is the input into the policy neural network
+
+        not modifying the buffer in-place is intended
+        IF I MODIFY LENGTH OF INPUT INTO NEURAL NETWORK I HAVE TO BE CAREFUL TO MODIFY OTHER THINGS IN THE CODE. FOR EXAMPLE,
+        "self.num_obs" and "self._get_noise_scale_vec()".
+
+        NOTE: Here the inputs to the neural network include batch size. The variable "heights" has shape (batch_size, N), where N
+        is the number of sampled terrain points, given by 
+            N = len(measured_heights_x) * len(measured_heights_y)
+
+        self.root_states is a vector of length (batch_size). We unsqueeze it so it turns into a matrix of size (batch_size, 1). Pytorch
+        then performs broadcasting of the "self.root_states" array and the "self.measured_heights" of size (batch_size, N).
         """
-        # not modifying the buffer in-place is intended
-        # IF I MODIFY LENGTH OF INPUT INTO NEURAL NETWORK I HAVE TO BE CAREFUL TO MODIFY OTHER THINGS IN THE CODE. FOR EXAMPLE,
-        # "self.num_obs" and "self._get_noise_scale_vec()".
         self.obs_buf = torch.cat((  self.base_lin_vel * self.obs_scales.lin_vel,
                                     self.base_ang_vel  * self.obs_scales.ang_vel,
                                     self.projected_gravity,

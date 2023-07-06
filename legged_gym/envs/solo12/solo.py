@@ -132,3 +132,17 @@ class Solo12(LeggedRobot):
     
     def _reward_smoothness_2(self):
         return torch.sum(torch.square(self.q_target - 2 * self.last_q_target + self.last_last_q_target), dim=1)
+    
+    def _reward_going_forward(self):
+        """
+        The intention of this reward is to reward the robot for simply moving forward. That way we can be assured that it will reach a gap.
+        """
+        forward = torch.zeros((Solo12Cfg.env.num_envs, 2), device=self.device)
+        forward[:,1] = 1
+
+        lin_vel_error = torch.sum(torch.square(forward - self.base_lin_vel[:, :2]), dim=1)
+        return torch.exp(-lin_vel_error/self.cfg.rewards.tracking_sigma)
+    
+    def _reward_vel_x(self):
+        r = torch.square(self.base_lin_vel[:, 0])
+        return r

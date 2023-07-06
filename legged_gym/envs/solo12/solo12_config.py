@@ -29,7 +29,7 @@ class Solo12Cfg( LeggedRobotCfg ):
         num_envs = 4096     # Number of robots present at the same time
 
     class terrain( LeggedRobotCfg.terrain ):
-        mesh_type = 'trimesh'    # plane
+        mesh_type = 'trimesh'    # plane or trimesh
         steps_height_scale = 0.5
         curriculum = True
         measure_heights = MEASURE_HEIGHTS
@@ -37,8 +37,9 @@ class Solo12Cfg( LeggedRobotCfg ):
         horizontal_difficulty_scale = 0.5 
         # We can modify terrain types depending on what we want to train robot on.
        #  terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete, stepping stones, gap, pit]
-        terrain_proportions = [1,          0,           0,        0,             0,        0,        0, 0]
+        terrain_proportions = [0,          0,           0,        0,             0,        0,        1,   0]
       
+        # The measured points of terrain serve as input to the robot. 
         measured_points_x = np.arange(-0.8, 0.805, 0.05).tolist() # 0.8mx1.2m rectangle (without center line)
         measured_points_y = np.arange(-0.5, 0.505, 0.05).tolist()
 
@@ -83,7 +84,7 @@ class Solo12Cfg( LeggedRobotCfg ):
         height_estimation = FEET_ORIGIN
 
         class curriculum ( LeggedRobotCfg.rewards.curriculum ):
-            enabled = True
+            enabled = True     #P Let's see what happens if we turn curriculum off. #PP DON'T Things won't work well. 
             delay = 500
             duration = 3500
             interpolation = 1.5
@@ -105,7 +106,7 @@ class Solo12Cfg( LeggedRobotCfg ):
             tracking_lin_vel = 6. # c_vel
             tracking_ang_vel = 6.
     
-            foot_clearance = -20. # -c_clear
+            foot_clearance = -20. # -c_clear -20
             foot_slip = -2. # -c_slip
             roll_pitch = -4. # -c_orn
             vel_z = -2 # -c_vz
@@ -115,19 +116,21 @@ class Solo12Cfg( LeggedRobotCfg ):
             smoothness_2 = -1.5 # -c_a2
 
             collision = -1.
-            #base_height = -2. 
+            base_height = -2. 
 
             termination = -0
             step_forecast = -0
 
             # I have modified these reward functions.
             test = 0.0
-            torques = -1.
-            base_height = -5.  #P Positive base_height makes robots crouch. Negative base_height makes robots stand tall but not jump
+            torques = -0
+            base_height = -0.  #P Positive base_height makes robots crouch. Negative base_height makes robots stand tall but not jump
+            going_forward = 0
+            vel_x = 0
 
     class commands( LeggedRobotCfg.commands ):
         class curriculum( LeggedRobotCfg.commands.curriculum ):
-            enabled = False
+            enabled = False   #P This originaly was set false
             duration = 1500
             interpolation = 2
 
@@ -183,7 +186,7 @@ class Solo12CfgPPO( LeggedRobotCfgPPO ):
         resume = False
         load_run = -1 # -1 = last run
         checkpoint = -1 # -1 = last saved model
-        max_iterations = 100000
+        max_iterations = 10000   #P Max iterations. Might affect the curriculum.
 
     class algorithm( LeggedRobotCfgPPO.algorithm ):
         learning_rate = Default() #0.005 #requested in the paper, but not working at all...
