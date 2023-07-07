@@ -26,7 +26,8 @@ Paper: https://arxiv.org/abs/2109.11978
    - Try running an example `cd examples && python 1080_balls_of_solitude.py`
    - For troubleshooting check docs `isaacgym/docs/index.html`
 2. Install rsl_rl (PPO implementation)
-   - Clone https://github.com/leggedrobotics/rsl_rl
+   - **EDIT** Clone https://github.com/E-Mans-Application/rsl_rl 
+   (This fork from https://github.com/leggedrobotics/rsl_rl is required for using branch "solo")
    -  `cd rsl_rl && pip install -e .` 
 3. Install legged_gym
     - Clone this repository
