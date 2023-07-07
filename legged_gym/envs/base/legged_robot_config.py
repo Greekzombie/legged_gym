@@ -308,8 +308,8 @@ class LeggedRobotCfgPPO(BaseConfig):
     runner_class_name = 'OnLeggedPolicyRunner'  # 'OnPolicyRunner' 
     class policy:
         init_noise_std = 1.0
-        actor_hidden_dims = [512, 256, 128]
-        critic_hidden_dims = [512, 256, 128]
+        actor_hidden_dims = [512, 512, 256, 128]
+        critic_hidden_dims = [512, 512, 256, 128]
         estimator_hidden_dims = [512, 256, 128]
         activation = 'elu' # can be elu, relu, selu, crelu, lrelu, tanh, sigmoid
         # only for 'ActorCriticRecurrent':

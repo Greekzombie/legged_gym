@@ -156,42 +156,52 @@ class Solo12(LeggedRobot):
         """
         # self.env_origins is a tensor of size (batch_size, 3)
         # We place the end spot 5 metres away in the x direction
-        init_starting_point = self.env_origins
-        wanted_end_spot = self.env_origins
-        wanted_end_spot[:, 0] += 5 
+        # Important that we use .detach().clone(), otherwise we just create new reference to same tensor self.env_origins()
+        wanted_end_spot = self.env_origins.detach().clone()
+        wanted_end_spot[:, 0] += 10
+        wanted_end_spot[:, 2] = self.get_terrain_height(wanted_end_spot[:,:2]) + 0.5
 
         # To calculate how far away robot is from end spot we compare its root state to wanted_end_spot
-        diff_sq = np.square(self.root_states[:, :3] - wanted_end_spot)
+        diff_sq = torch.sum(torch.square(self.root_states[:, :3] - wanted_end_spot), dim=1)
 
         # Time since start of episode. Vector of length(batch_size)
         t = self.episode_length_buf
 
         # Max episode length given in number of steps
         T = self.max_episode_length
-        T_r = T/2
+        T_r = T/5
 
         # For a more complex if condition, "torch.where" would be useful
-        task_reward = (t > T - T_r)
-        task_reward *= 1 / (self.episode_length_buf * (1 + diff_sq))
+        # We also have to be careful to express T_r in units of seconds, as done in the paper. Otherwise, the reward
+        # signal is not strong enough.
+        task_reward = (t > T - T_r).float()
+        task_reward *= 1 / (T_r*self.dt * (1 + diff_sq))
 
         return task_reward
     
     def _reward_exploration(self):
         """P
-        We reward robot for moving towards the intended goal. 
+        We reward robot for moving towards the intended goal. We remove this reward after a few iterations. 
         """
-        init_starting_point = self.env_origins
-        wanted_end_spot = self.env_origins
-        wanted_end_spot[:, 0] += 5 
+        iteration = self.common_step_counter // self.cfg_ppo.runner.num_steps_per_env
+        if iteration < 200:
+            wanted_end_spot = self.env_origins.detach().clone()
+            wanted_end_spot[:, 0] += 10 
+            wanted_end_spot[:, 2] = self.get_terrain_height(wanted_end_spot[:,:2]) + 0.5
 
-        # To calculate how far away robot is from end spot we compare its root state to wanted_end_spot
-        diff = wanted_end_spot - self.root_states[:, :3]
-        norm_diff = torch.linalg.vector_norm(diff)
-        norm_base_lin_vel = torch.linalg.vector_norm(self.base_lin_vel[:, :3])
+            # To calculate how far away robot is from end spot we compare its root state to wanted_end_spot
+            diff = wanted_end_spot - self.root_states[:, :3]
+            norm_diff = torch.linalg.vector_norm(diff)
+            norm_base_lin_vel = torch.linalg.vector_norm(self.base_lin_vel[:, :3])
 
-        # CHANGE CAHNGE 
-        exploration_reward = torch.vdot(self.base_lin_vel[:, :3], diff, dim=1) / (norm_diff*norm_base_lin_vel)
+            # Both vectors are of shape (batch_size, 3)
+            # With einsum we specify we wish the function to take in two arrays with indices 'ij' and for it to return a 
+            # vector with index i.
+            exploration_reward = torch.einsum('ij,ij->i', self.base_lin_vel[:, :3], diff) / (norm_base_lin_vel*norm_diff)
 
-        return exploration_reward
+            return exploration_reward 
+        
+        else:
+            return 0
 
 
