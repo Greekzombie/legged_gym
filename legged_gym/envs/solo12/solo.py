@@ -146,3 +146,52 @@ class Solo12(LeggedRobot):
     def _reward_vel_x(self):
         r = torch.square(self.base_lin_vel[:, 0])
         return r
+    
+    def _reward_go_to_spot(self):
+        """P
+        Function intended to encourage robot to go to a particular endspot. We can also reward it for how quickly it manages to reach
+        that spot. 
+
+        Obtained from the research paper: Advanced Skills by Learning Locomotion and Local Navigation End-to-End
+        """
+        # self.env_origins is a tensor of size (batch_size, 3)
+        # We place the end spot 5 metres away in the x direction
+        init_starting_point = self.env_origins
+        wanted_end_spot = self.env_origins
+        wanted_end_spot[:, 0] += 5 
+
+        # To calculate how far away robot is from end spot we compare its root state to wanted_end_spot
+        diff_sq = np.square(self.root_states[:, :3] - wanted_end_spot)
+
+        # Time since start of episode. Vector of length(batch_size)
+        t = self.episode_length_buf
+
+        # Max episode length given in number of steps
+        T = self.max_episode_length
+        T_r = T/2
+
+        # For a more complex if condition, "torch.where" would be useful
+        task_reward = (t > T - T_r)
+        task_reward *= 1 / (self.episode_length_buf * (1 + diff_sq))
+
+        return task_reward
+    
+    def _reward_exploration(self):
+        """P
+        We reward robot for moving towards the intended goal. 
+        """
+        init_starting_point = self.env_origins
+        wanted_end_spot = self.env_origins
+        wanted_end_spot[:, 0] += 5 
+
+        # To calculate how far away robot is from end spot we compare its root state to wanted_end_spot
+        diff = wanted_end_spot - self.root_states[:, :3]
+        norm_diff = torch.linalg.vector_norm(diff)
+        norm_base_lin_vel = torch.linalg.vector_norm(self.base_lin_vel[:, :3])
+
+        # CHANGE CAHNGE 
+        exploration_reward = torch.vdot(self.base_lin_vel[:, :3], diff, dim=1) / (norm_diff*norm_base_lin_vel)
+
+        return exploration_reward
+
+

@@ -34,7 +34,7 @@ class Solo12Cfg( LeggedRobotCfg ):
         curriculum = True
         measure_heights = MEASURE_HEIGHTS
         horizontal_scale = 0.05 # [m]
-        horizontal_difficulty_scale = 0.5 
+        horizontal_difficulty_scale = 0.6 
         # We can modify terrain types depending on what we want to train robot on.
        #  terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete, stepping stones, gap, pit]
         terrain_proportions = [0,          0,           0,        0,             0,        0,        1,   0]
@@ -103,8 +103,8 @@ class Solo12Cfg( LeggedRobotCfg ):
             
             """
 
-            tracking_lin_vel = 6. # c_vel
-            tracking_ang_vel = 6.
+            #tracking_lin_vel = 6. # c_vel
+            #tracking_ang_vel = 6.
     
             foot_clearance = -20. # -c_clear -20
             foot_slip = -2. # -c_slip
@@ -127,6 +127,8 @@ class Solo12Cfg( LeggedRobotCfg ):
             base_height = -0.  #P Positive base_height makes robots crouch. Negative base_height makes robots stand tall but not jump
             going_forward = 0
             vel_x = 0
+            go_to_spot = 10
+            exploration = 5
 
     class commands( LeggedRobotCfg.commands ):
         class curriculum( LeggedRobotCfg.commands.curriculum ):
@@ -186,7 +188,7 @@ class Solo12CfgPPO( LeggedRobotCfgPPO ):
         resume = False
         load_run = -1 # -1 = last run
         checkpoint = -1 # -1 = last saved model
-        max_iterations = 10000   #P Max iterations. Might affect the curriculum.
+        max_iterations = 20000   #P Max iterations. Might affect the curriculum.
 
     class algorithm( LeggedRobotCfgPPO.algorithm ):
         learning_rate = Default() #0.005 #requested in the paper, but not working at all...
