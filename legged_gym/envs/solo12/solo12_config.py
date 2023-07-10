@@ -34,10 +34,10 @@ class Solo12Cfg( LeggedRobotCfg ):
         curriculum = True
         measure_heights = MEASURE_HEIGHTS
         horizontal_scale = 0.05 # [m]
-        horizontal_difficulty_scale = 0.6 
+        horizontal_difficulty_scale = 0.7 
         # We can modify terrain types depending on what we want to train robot on.
        #  terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete, stepping stones, gap, pit]
-        terrain_proportions = [0.05,          0,        0.1,        0.1,          0,        0,          0.7,   0.05]
+        terrain_proportions = [0,          0,        0,        0,          0,        0,          1,   0]
       
         # The measured points of terrain serve as input to the robot. 
         measured_points_x = np.arange(-1, 1.005, 0.05).tolist() # 0.8mx1.2m rectangle (without center line)
