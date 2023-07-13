@@ -203,5 +203,57 @@ class Solo12(LeggedRobot):
         
         else:
             return 0
+        
+    def _reward_clear_gap(self):
+        """P
+        This is intended to reward the robot for clearing the gap with sufficient height. It does this by rewarding it
+        when it has high upwards velocity when it is crossing the gap.
+
+        self.feet_on_ground is a tensor which tells us with a boolean what feet are on the ground at the moment.
+        Shape: (batch_size, 4s)
+
+        I will also reward it 
+        """
+        # If base of robot is above a gap, reward it for having velocity in the z direction
+        above_gap_condition = (self.get_terrain_height(self.root_states[:, :2]) < -0.1).float()
+        feet_not_in_contact_condition = torch.prod((~self.feet_on_ground).float(), dim=1)
+
+        # We don't include feet_not_in_contact_condition. If it's not necessary for it to jump, we also reward it for simply
+        # keeping upright posture when crossing gap. 
+        #reward_upwards_vel = above_gap_condition * self.root_states[:, 2] #(self.base_lin_vel[:, 2])
+        reward_upwards_vel = above_gap_condition * (self.root_states[:, 2] + 0.5*self.base_lin_vel[:, 2])
+
+        norm_base_lin_vel_horizontal = torch.sqrt(torch.square(self.base_lin_vel[:, 0]) + torch.square(self.base_lin_vel[:, 1]))
+        reward_horizontal_vel = above_gap_condition * feet_not_in_contact_condition * norm_base_lin_vel_horizontal
+
+        #print(self.get_terrain_height(self.root_states[:, :2])[:10])
+
+        return reward_upwards_vel + reward_horizontal_vel
+
+    def _reward_feet_not_in_gap(self):
+        """P
+        self.get_feet_height() returns a tensor of (batch_size, 4)
+
+        As the value function is calculated as in the infinite horizon case, 
+        """
+        feet_in_gap = (self.get_feet_height() < -0.1).float()
+
+        return torch.sum(feet_in_gap, dim=1)
+    
+    def _reward_stalling(self):
+        """P
+        Idea is to penalise robot for stalling and staying stopped when there's a command pushing it forward and it's not over a gap.
+        This reward is intended to penalise robot for being hesitant to jump over the gap.
+        """
+        # lin_vel_error = torch.sum(torch.square(self.commands[:, :2] - self.base_lin_vel[:, :2]), dim=1)
+
+        norm_command_vel_xy = torch.sqrt(torch.sum(torch.square(self.commands[:, :2]), dim=1))
+        norm_base_vel_xy = torch.sqrt(torch.sum(torch.square(self.base_lin_vel[:, :2]), dim=1))
+
+        robot_going_slow_condition = (norm_base_vel_xy < norm_command_vel_xy).float()
+        not_above_gap_condition = (~(self.get_terrain_height(self.root_states[:, :2]) < -0.1)).float()
+        
+        return robot_going_slow_condition * not_above_gap_condition * (norm_command_vel_xy - norm_base_vel_xy)
+
 
 

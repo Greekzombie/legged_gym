@@ -117,7 +117,7 @@ class Terrain:
         discrete_obstacles_height = self.cfg.steps_height_scale  * (0.05 + difficulty * 0.2)
         stepping_stones_size = 1.5 * (1.05 - difficulty)
         stone_distance = self.cfg.horizontal_difficulty_scale * (0.05 + 0.35 * difficulty)
-        gap_size = self.cfg.horizontal_difficulty_scale * difficulty
+        gap_size = self.cfg.horizontal_difficulty_scale * difficulty  #P For curriculum, variable difficulty is in the region [0,1]
         pit_depth = self.cfg.steps_height_scale * 0.5 * difficulty
         if choice < self.proportions[0]:
             if choice < self.proportions[0]/ 2:
@@ -164,6 +164,8 @@ class Terrain:
         self.env_origins[i, j] = [env_origin_x, env_origin_y, env_origin_z]
 
 def gap_terrain(terrain, gap_size, platform_size=1.):
+    #P the use of int() in this context is related to converting the gap size from meter units to grid mesh units, rather 
+    # than directly manipulating the meter-based value.
     gap_size = int(gap_size / terrain.horizontal_scale)
     platform_size = int(platform_size / terrain.horizontal_scale)
 
@@ -174,6 +176,7 @@ def gap_terrain(terrain, gap_size, platform_size=1.):
     y1 = (terrain.width - platform_size) // 2
     y2 = y1 + gap_size
    
+    #P The height of the terrain at a gap is set to -1000
     terrain.height_field_raw[center_x-x2 : center_x + x2, center_y-y2 : center_y + y2] = -1000
     terrain.height_field_raw[center_x-x1 : center_x + x1, center_y-y1 : center_y + y1] = 0
 

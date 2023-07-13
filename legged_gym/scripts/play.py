@@ -139,6 +139,6 @@ if __name__ == '__main__':
     RECORD_FRAMES = False
     MOVE_CAMERA = False     
     GAIT_PROFILE = False
-    USE_JOYSTICK = False     # MODIFY THIS DEPENDING ON WHETHER WE HAVE JOYSTICK OR NOT
+    USE_JOYSTICK = True     # MODIFY THIS DEPENDING ON WHETHER WE HAVE JOYSTICK OR NOT
     args = get_args()
     play(args)
