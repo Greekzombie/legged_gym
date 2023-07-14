@@ -1,4 +1,4 @@
-import numpy as np
+import numpy as np  # new addition
 from legged_gym.envs.base.legged_robot_config import LeggedRobotCfg, LeggedRobotCfgPPO, FEET_ORIGIN, AVERAGE_MEASUREMENT
 from legged_gym.envs.base.base_config import Default
 
