@@ -121,8 +121,8 @@ class Solo12Cfg( LeggedRobotCfg ):
             
             """
 
-            tracking_lin_vel = 20. * 1.3 # c_vel
-            tracking_ang_vel = 20. * 1.3
+            tracking_lin_vel = 30 # c_vel
+            tracking_ang_vel = 30
             #go_to_spot = 50
             #exploration = 30
     
@@ -148,7 +148,7 @@ class Solo12Cfg( LeggedRobotCfg ):
             vel_x = 0
 
             termination = -500
-            clear_gap = 40 * 1.3
+            clear_gap = 30
             feet_not_in_gap = -50
             orientation = -20            # Penalize non flat base orientation
             torques = -0.01  # maybe reduce this a bit more
