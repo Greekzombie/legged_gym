@@ -31,17 +31,17 @@ class Solo12Cfg( LeggedRobotCfg ):
     class terrain( LeggedRobotCfg.terrain ):
         mesh_type = 'trimesh'    # plane or trimesh
         steps_height_scale = 0.5
-        curriculum = False     #P Once robot knows how to jump, we can take away terrain curriculum, and push it to its max capabilities.
+        curriculum = True     #P Once robot knows how to jump, we can take away terrain curriculum, and push it to its max capabilities.
         measure_heights = MEASURE_HEIGHTS
         horizontal_scale = 0.05 # [m]  #P Defines the granularity of the mesh grid
-        horizontal_difficulty_scale = 0.8   #P [m]
+        horizontal_difficulty_scale = 0.6   #P [m]
         # We can modify terrain types depending on what we want to train robot on.
         # terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete, stepping stones, gap, pit]
-        terrain_proportions = [0,          0,        0,        0,          0,        0,          1,   0]
+        terrain_proportions = [0.1,          0.1,        0.1,        0.1,          0.1,        0.1,          0.2,   0.2]
       
         # The measured points of terrain serve as input to the robot. 
-        measured_points_x = np.arange(-1, 1.005, 0.05).tolist() # 0.8mx1.2m rectangle (without center line)
-        measured_points_y = np.arange(-0.5, 0.505, 0.05).tolist()
+        measured_points_x = np.arange(-1.2, 1.205, 0.05).tolist() # 0.8mx1.2m rectangle (without center line)
+        measured_points_y = np.arange(-1.2, 1.205, 0.05).tolist()
 
     class init_state( LeggedRobotCfg.init_state ):
         default_joint_angles = { # = target angles [rad] when action = 0.0
@@ -121,12 +121,12 @@ class Solo12Cfg( LeggedRobotCfg ):
             
             """
 
-            tracking_lin_vel = 20. * 1.3 # c_vel
-            tracking_ang_vel = 20. * 1.3
+            tracking_lin_vel = 20. # c_vel
+            tracking_ang_vel = 20.
             #go_to_spot = 50
             #exploration = 30
     
-            #P foot_clearance = -20. # -c_clear -20
+            foot_clearance = -20. # -c_clear -20
             foot_slip = -2. # -c_slip
             roll_pitch = -4. # -c_orn
             #P vel_z = -2 # -c_vz
@@ -147,10 +147,10 @@ class Solo12Cfg( LeggedRobotCfg ):
             going_forward = 0
             vel_x = 0
 
-            termination = -500
-            clear_gap = 40 * 1.3
-            feet_not_in_gap = -50
-            orientation = -20            # Penalize non flat base orientation
+            #termination = -500
+            #clear_gap = 40 * 1.3
+            #feet_not_in_gap = -50
+            #orientation = -20            # Penalize non flat base orientation
             torques = -0.01  # maybe reduce this a bit more
 
     class commands( LeggedRobotCfg.commands ):
@@ -211,7 +211,7 @@ class Solo12CfgPPO( LeggedRobotCfgPPO ):
         resume = False
         load_run = -1 # -1 = last run
         checkpoint = -1 # -1 = last saved model
-        max_iterations = 40000   #P Max iterations. Might affect the curriculum.
+        max_iterations = 80000   #P Max iterations. Might affect the curriculum.
 
     class algorithm( LeggedRobotCfgPPO.algorithm ):
         learning_rate = Default() #0.005 #requested in the paper, but not working at all...
