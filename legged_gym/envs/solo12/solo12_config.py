@@ -120,9 +120,8 @@ class Solo12Cfg( LeggedRobotCfg ):
                                 class Solo12(LeggedRobot):
             
             """
-
-            tracking_lin_vel = 20. # c_vel
-            tracking_ang_vel = 20.
+            tracking_lin_vel = 10. # c_vel
+            tracking_ang_vel = 10.
             #go_to_spot = 50
             #exploration = 30
     
