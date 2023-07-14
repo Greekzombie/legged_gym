@@ -40,8 +40,8 @@ class Solo12Cfg( LeggedRobotCfg ):
         terrain_proportions = [0.05,          0,        0.1,        0.1,          0,        0,          0.7,   0.05]
       
         # The measured points of terrain serve as input to the robot. 
-        measured_points_x = np.arange(-1, 1.005, 0.05).tolist() # 0.8mx1.2m rectangle (without center line)
-        measured_points_y = np.arange(-0.5, 0.505, 0.05).tolist()
+        measured_points_x = np.arange(-1.2, 1.205, 0.05).tolist() # 0.8mx1.2m rectangle (without center line)
+        measured_points_y = np.arange(-1.2, 1.205, 0.05).tolist()
 
     class init_state( LeggedRobotCfg.init_state ):
         default_joint_angles = { # = target angles [rad] when action = 0.0
