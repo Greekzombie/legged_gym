@@ -236,9 +236,16 @@ class Solo12(LeggedRobot):
 
         As the value function is calculated as in the infinite horizon case, 
         """
-        feet_in_gap = (self.get_feet_height() < -0.1).float()
+        feet_in_gap = (self.get_feet_height() < -0.1).float()   # (B, 4)
 
         return torch.sum(feet_in_gap, dim=1)
+    
+    def _reward_feet_not_in_gap_scaled(self):
+        feet_in_gap = (self.get_feet_height() < -0.1).float()   # (B, 4)
+
+        scale_penalty_depth = torch.einsum('ij,ij->i', feet_in_gap, -self.get_feet_height())
+
+        return scale_penalty_depth
     
     def _reward_stalling(self):
         """P
