@@ -27,6 +27,7 @@ class Solo12Cfg( LeggedRobotCfg ):
     class env( LeggedRobotCfg.env):
         num_actions = 12    # Number of actions robot can perform. In this case, the SOLO robot has 12 DOF, one in each leg
         num_envs = 4096     # Number of robots present at the same time
+        variable_PD = False
 
     class terrain( LeggedRobotCfg.terrain ):
         mesh_type = 'trimesh'    # plane or trimesh

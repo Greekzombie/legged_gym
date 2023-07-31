@@ -114,6 +114,7 @@ class LeggedRobot(BaseTask):
         # step physics and render each frame
         self.render()
         for _ in range(self.cfg.control.decimation):
+            print(self.torques.shape)
             self.torques = self._compute_torques(self.actions).view(self.torques.shape)
             self.gym.set_dof_actuation_force_tensor(self.sim, gymtorch.unwrap_tensor(self.torques))
             self.gym.simulate(self.sim)
@@ -568,17 +569,40 @@ class LeggedRobot(BaseTask):
         Returns:
             [torch.Tensor]: Torques sent to the simulation
         """
-        #pd controller
-        actions_scaled = actions * self.cfg.control.action_scale
+        #P PD controller is different depending on whether the last two elements of actions correspond to modifications
+        #  to the P and D variables.
+        print("###################################################################")
+        if self.cfg.env.variable_PD:
+            joint_actions_scaled = actions[:, :-2]
+
+            # self.p_gains[:-2] is a 1D vector of length n_DOF. We want resulting p_gains to be a matrix of size
+            # (batch_size, n_DOF). We are going to utilize broadcasting to achieve this. 
+            modification_P = actions[:, -2] # (batch_size)
+            modification_P = modification_P.view(len(modification_P), 1) # (batch_size, 1)
+            p_gains = self.p_gains[:-2] + modification_P # (batch_size, n_DOF)
+
+            # Similar for d_gains
+            modification_D = actions[:, -1] # (batch_size, )
+            modification_D = modification_D.view(len(modification_D), 1) # (batch_size, 1)
+            d_gains = self.d_gains[:-2] + modification_D # (batch_size, n_DOF)    
+
+        else:
+            joint_actions_scaled = actions.detach().clone()  
+            p_gains = self.p_gains # (n_DOF)
+            d_gains = self.p_gains # (n_DOF)
+
+        joint_actions_scaled *= self.cfg.control.action_scale
         control_type = self.cfg.control.control_type
         if control_type=="P":
-            torques = self.p_gains*(actions_scaled + self.default_dof_pos - self.dof_pos) - self.d_gains*self.dof_vel
+            torques = p_gains*(joint_actions_scaled + self.default_dof_pos - self.dof_pos) - d_gains*self.dof_vel
         elif control_type=="V":
-            torques = self.p_gains*(actions_scaled - self.dof_vel) - self.d_gains*(self.dof_vel - self.last_dof_vel)/self.sim_params.dt
+            torques = p_gains*(joint_actions_scaled - self.dof_vel) - d_gains*(self.dof_vel - self.last_dof_vel)/self.sim_params.dt
         elif control_type=="T":
-            torques = actions_scaled
+            torques = joint_actions_scaled
         else:
             raise NameError(f"Unknown controller type: {control_type}")
+        
+        print(torques.shape)
         return torch.clip(torques, -self.torque_limits, self.torque_limits)
 
     def _reset_dofs(self, env_ids):

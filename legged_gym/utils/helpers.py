@@ -154,6 +154,14 @@ def update_cfg_from_args(env_cfg, cfg_train, args):
         # num envs
         if args.num_envs is not None:
             env_cfg.env.num_envs = args.num_envs
+
+        # We also overwrite variable_PD boolean if specified at command line
+        if args.variable_PD is not None:
+            env_cfg.env.variable_PD = args.variable_PD
+        # If variable_PD is set to true, then we augment number of actions
+        if env_cfg.env.variable_PD:
+            env_cfg.env.num_actions += 2
+
     if cfg_train is not None:
         if args.seed is not None:
             cfg_train.seed = args.seed
@@ -189,6 +197,7 @@ def get_args():
         {"name": "--num_envs", "type": int, "help": "Number of environments to create. Overrides config file if provided."},
         {"name": "--seed", "type": int, "help": "Random seed. Overrides config file if provided."},
         {"name": "--max_iterations", "type": int, "help": "Maximum number of training iterations. Overrides config file if provided."},
+        {"name": "--variable_PD", "type": bool, "help": "Boolean which decides if variable PD is implemented. Overrides config file if provided."},
     ]
     # parse arguments
     args = gymutil.parse_arguments(
