@@ -224,7 +224,7 @@ class LeggedRobotCfg(BaseConfig):
             feet_on_ground = 10
         clip_observations = 100.
         clip_actions = 100.
-        clip_measurements = 1.
+        clip_measurements = 1.  #P Modified in solo12_config to 0.25
         
         _enforce_gait_profile = True # do not load from yaml
         gait_profile = None # set in play.py / do not override

@@ -85,7 +85,10 @@ class Terrain:
     def curiculum(self):
         for j in range(self.cfg.num_cols):
             for i in range(self.cfg.num_rows):
-                difficulty = i / self.cfg.num_rows
+                #P Here is where the terrain curriculum difficulty is defined. We can modify it so that there is always
+                #  some level of difficulty present.
+                difficulty = i / self.cfg.num_rows     #P i -> i+1  to get difficulty in range [0.1, 1.0]
+                #difficulty = 0.5 + (i+1) / (2*self.cfg.num_rows)  #P This difficulty for finetuning model on harder terrains
                 choice = j / self.cfg.num_cols + 0.001
 
                 terrain = self.make_terrain(choice, difficulty)

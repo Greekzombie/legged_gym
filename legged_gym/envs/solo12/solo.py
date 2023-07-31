@@ -12,6 +12,9 @@ from legged_gym.envs import LeggedRobot
 from legged_gym.utils.math import wrap_to_pi
 from .solo12_config import Solo12Cfg, Solo12CfgPPO
 
+#P Necessary addition so that the penalty "feet_not_in_gap" does not affect the stairs down and pit terrains.
+height_gap = -5
+
 class Solo12(LeggedRobot):
 
     cfg: Solo12Cfg
@@ -215,7 +218,7 @@ class Solo12(LeggedRobot):
         I will also reward it 
         """
         # If base of robot is above a gap, reward it for having velocity in the z direction
-        above_gap_condition = (self.get_terrain_height(self.root_states[:, :2]) < -0.1).float()
+        above_gap_condition = (self.get_terrain_height(self.root_states[:, :2]) <= height_gap).float()
         feet_not_in_contact_condition = torch.prod((~self.feet_on_ground).float(), dim=1)
 
         # We don't include feet_not_in_contact_condition. If it's not necessary for it to jump, we also reward it for simply
@@ -236,12 +239,12 @@ class Solo12(LeggedRobot):
 
         As the value function is calculated as in the infinite horizon case, 
         """
-        feet_in_gap = (self.get_feet_height() < -0.1).float()   # (B, 4)
+        feet_in_gap = (self.get_feet_height() <= height_gap).float()   # (B, 4)
 
         return torch.sum(feet_in_gap, dim=1)
     
     def _reward_feet_not_in_gap_scaled(self):
-        feet_in_gap = (self.get_feet_height() < -0.1).float()   # (B, 4)
+        feet_in_gap = (self.get_feet_height() <= height_gap).float()   # (B, 4)
 
         scale_penalty_depth = torch.einsum('ij,ij->i', feet_in_gap, -self.get_feet_height())
 
@@ -258,9 +261,29 @@ class Solo12(LeggedRobot):
         norm_base_vel_xy = torch.sqrt(torch.sum(torch.square(self.base_lin_vel[:, :2]), dim=1))
 
         robot_going_slow_condition = (norm_base_vel_xy < norm_command_vel_xy).float()
-        not_above_gap_condition = (~(self.get_terrain_height(self.root_states[:, :2]) < -0.1)).float()
+        not_above_gap_condition = (~(self.get_terrain_height(self.root_states[:, :2]) <= height_gap)).float()
         
         return robot_going_slow_condition * not_above_gap_condition * (norm_command_vel_xy - norm_base_vel_xy)
+    
+    def _reward_smoothness_1_crossing_gap(self):
+        above_gap_condition = (self.get_terrain_height(self.root_states[:, :2]) <= height_gap).float()
+        smoothness = torch.sum(torch.square(self.q_target - self.last_q_target), dim=1)
+
+        return above_gap_condition * smoothness
+
+    def _reward_smoothness_2_crossing_gap(self):
+        above_gap_condition = (self.get_terrain_height(self.root_states[:, :2]) <= height_gap).float()
+        smoothness = torch.sum(torch.square(self.q_target - 2 * self.last_q_target + self.last_last_q_target), dim=1)
+
+        return above_gap_condition * smoothness
+    
+    def _reward_harsh_torque_limits(self):
+        """
+        Penalize robot very harshly if it saturates the torques.
+        """
+        # Penalize torques too close to the limit
+        harsh_torque_limit = 0.9
+        return torch.sum((torch.abs(self.torques) - self.torque_limits*harsh_torque_limit).clip(min=0.), dim=1)
 
 
 

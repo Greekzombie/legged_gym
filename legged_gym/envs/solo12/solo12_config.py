@@ -31,15 +31,16 @@ class Solo12Cfg( LeggedRobotCfg ):
     class terrain( LeggedRobotCfg.terrain ):
         mesh_type = 'trimesh'    # plane or trimesh
         steps_height_scale = 0.5
-        curriculum = False     #P Once robot knows how to jump, we can take away terrain curriculum, and push it to its max capabilities.
+        curriculum = True     #P Once robot knows how to jump, we can take away terrain curriculum, and push it to its max capabilities.
         measure_heights = MEASURE_HEIGHTS
         horizontal_scale = 0.05 # [m]  #P Defines the granularity of the mesh grid
-        horizontal_difficulty_scale = 0.8   #P [m]
+        horizontal_difficulty_scale = 0.6   #P [m]
 
         # We can modify terrain types depending on what we want to train robot on.
         # terrain types: [smooth slope, rough slope, stairs up, stairs down, discrete, stepping stones, gap, pit]
-        #terrain_proportions = [0.1,          0.1,        0.1,        0.1,          0.1,        0.1,          0.2,   0.2]
-        terrain_proportions = [0,          0,        0,        0,          0,        0,          1,   0]
+        terrain_proportions = [0.1,          0.1,        0.1,        0.1,          0.05,        0.05,     0.3,   0.2]
+        #terrain_proportions = [0.05,          0.05,        0.1,        0.1,          0,        0,          0.6,   0.1]
+        #terrain_proportions = [0,          0,        0,        0,          0,        0,          1,   0]
       
         # The measured points of terrain serve as input to the robot. 
         measured_points_x = np.arange(-1.2, 1.205, 0.05).tolist() # 0.8mx1.2m rectangle (without center line)
@@ -82,6 +83,8 @@ class Solo12Cfg( LeggedRobotCfg ):
         only_positive_rewards = False
         base_height_target = 0.215
         tracking_sigma = 0.25
+        soft_torque_limit = 0.7
+        max_contact_force = 90. # forces above this value are penalized
 
         height_estimation = FEET_ORIGIN
 
@@ -90,7 +93,7 @@ class Solo12Cfg( LeggedRobotCfg ):
             P. Class for negative rewards. All treated equally. More precisely, negative rewards are allowed at the end of training.
             Rewards with an associated negative scale are the ones subjected to a curriculum.
             """
-            enabled = False     #P Let's see what happens if we turn curriculum off. #PP DON'T Things won't work well. 
+            enabled = True     #P Let's see what happens if we turn curriculum off. #PP DON'T Things won't work well. 
             delay = 500
             duration = 3500
             interpolation = 1.5
@@ -122,8 +125,8 @@ class Solo12Cfg( LeggedRobotCfg ):
                                 class Solo12(LeggedRobot):
             
             """
-            tracking_lin_vel = 10. # c_vel
-            tracking_ang_vel = 10.
+            tracking_lin_vel = 40. # c_vel
+            tracking_ang_vel = 40.
             #go_to_spot = 50
             #exploration = 30
     
@@ -138,25 +141,21 @@ class Solo12Cfg( LeggedRobotCfg ):
 
             collision = -1.
             base_height = -2. 
-
-            #P termination = -0 
             step_forecast = -0
 
-            # I have modified these reward functions.
-            test = 0.0
-            base_height = -0.  #P Positive base_height makes robots crouch. Negative base_height makes robots stand tall but not jump
-            going_forward = 0
-            vel_x = 0
+            termination = -1e3
+            #clear_gap = 40 
+            #feet_not_in_gap = -40
+            orientation = -20            # Penalize non flat base orientation
+            torques = -0.02  # maybe reduce this a bit more
+            smoothness_1_crossing_gap = -2.5*2
+            smoothness_2_crossing_gap = -1.5*2
 
-            #termination = -500
-            #clear_gap = 40 * 1.3
-            #feet_not_in_gap = -50
-            #orientation = -20            # Penalize non flat base orientation
-            torques = -0.01  # maybe reduce this a bit more
-
-            clear_gap = 10
-            feet_not_in_gap_scaled = -10
-            orientation = -10
+            #P Added
+            torque_limits = -6
+            harsh_torque_limits = -100
+            feet_contact_forces = -3e3
+            dof_acc = -1e-6
 
     class commands( LeggedRobotCfg.commands ):
         class curriculum( LeggedRobotCfg.commands.curriculum ):
@@ -217,7 +216,7 @@ class Solo12CfgPPO( LeggedRobotCfgPPO ):
         load_run = -1 # -1 = last run
         checkpoint = -1 # -1 = last saved model
         num_steps_per_env = 24
-        max_iterations = 20000   #P Max iterations. Might affect the curriculum.
+        max_iterations = 80000   #P Max iterations. Might affect the curriculum.
 
     class algorithm( LeggedRobotCfgPPO.algorithm ):
         learning_rate = Default() #0.005 #requested in the paper, but not working at all...

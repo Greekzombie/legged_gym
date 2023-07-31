@@ -108,7 +108,7 @@ class LeggedRobot(BaseTask):
         Args:
             actions (torch.Tensor): Tensor of shape (num_envs, num_actions_per_env)
         """
-
+        #P print(actions[19])   # We can print here the output of the neural network (the position of the 12 joints)
         clip_actions = self.cfg.normalization.clip_actions
         self.actions[:] = torch.clip(actions[..., :self.num_actions], -clip_actions, clip_actions)
         # step physics and render each frame
@@ -407,6 +407,8 @@ class LeggedRobot(BaseTask):
             heights = torch.clip(heights, -clip, clip)
             if self.cfg.terrain.measure_heights:
                 self.obs_buf = torch.cat((self.obs_buf, heights * self.obs_scales.height_measurements), dim=-1)
+                #P print(f"Max: {torch.max(heights * self.obs_scales.height_measurements)}   Min: {torch.min(heights * self.obs_scales.height_measurements)}")
+                #P print(" ")
             
             if self.cfg.contact_classification.enabled:
                 heights = ((-heights + clip) / self.cfg.terrain.vertical_scale).long() 
