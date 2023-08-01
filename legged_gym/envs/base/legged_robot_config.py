@@ -66,6 +66,7 @@ class LeggedRobotCfg(BaseConfig):
         num_envs = 4096
         num_privileged_obs = None # if not None a priviledge_obs_buf will be returned by step() (critic obs for assymetric training). None is returned otherwise 
         num_actions = 12
+
         env_spacing = 3.  # not used with heightfields/trimeshes 
         send_timeouts = True # send time out information to the algorithm
         episode_length_s = 20 # episode length in seconds
@@ -225,6 +226,8 @@ class LeggedRobotCfg(BaseConfig):
             feet_on_ground = 10
         clip_observations = 100.
         clip_actions = 100.
+        clip_P_gain_modification = 1.
+        clip_D_gain_modification = 0.2
         clip_measurements = 1.  #P Modified in solo12_config to 0.25
         
         _enforce_gait_profile = True # do not load from yaml

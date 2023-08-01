@@ -155,12 +155,16 @@ def update_cfg_from_args(env_cfg, cfg_train, args):
         if args.num_envs is not None:
             env_cfg.env.num_envs = args.num_envs
 
-        # We also overwrite variable_PD boolean if specified at command line
-        if args.variable_PD is not None:
+        #P args.variable_PD will always be False by default if no command line argument is given. 
+        #  In this case, we would want to take the variable_PD value defined in the config file. 
+        #  However, if "--variable_PD" is specified at command line, args.variable_PD will be True
+        if args.variable_PD:
+            #P print("ARGUMENT VARIABLE_PD IN COMMAND LINE")
             env_cfg.env.variable_PD = args.variable_PD
         # If variable_PD is set to true, then we augment number of actions
         if env_cfg.env.variable_PD:
             env_cfg.env.num_actions += 2
+            #P print("SETTING VARIABLE_PD")
 
     if cfg_train is not None:
         if args.seed is not None:
@@ -197,13 +201,13 @@ def get_args():
         {"name": "--num_envs", "type": int, "help": "Number of environments to create. Overrides config file if provided."},
         {"name": "--seed", "type": int, "help": "Random seed. Overrides config file if provided."},
         {"name": "--max_iterations", "type": int, "help": "Maximum number of training iterations. Overrides config file if provided."},
-        {"name": "--variable_PD", "type": bool, "help": "Boolean which decides if variable PD is implemented. Overrides config file if provided."},
+        {"name": "--variable_PD", "action": "store_true", "default": False, "help": "Boolean which decides if variable PD is implemented. Overrides config file if provided."},
     ]
     # parse arguments
     args = gymutil.parse_arguments(
         description="RL Policy",
         custom_parameters=custom_parameters)
-
+    
     # name allignment
     args.sim_device_id = args.compute_device_id
     args.sim_device = args.sim_device_type

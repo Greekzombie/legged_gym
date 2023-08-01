@@ -108,13 +108,21 @@ class LeggedRobot(BaseTask):
         Args:
             actions (torch.Tensor): Tensor of shape (num_envs, num_actions_per_env)
         """
-        #P print(actions[19])   # We can print here the output of the neural network (the position of the 12 joints)
         clip_actions = self.cfg.normalization.clip_actions
-        self.actions[:] = torch.clip(actions[..., :self.num_actions], -clip_actions, clip_actions)
+        self.actions[:,:self.num_dof] = torch.clip(actions[..., :self.num_dof], -clip_actions, clip_actions)
+        
+        # If variable_PD, we clip the allowed P and D modifications
+        if self.cfg.env.variable_PD:
+            clip_P_value = self.cfg.normalization.clip_P_gain_modification
+            clip_D_value = self.cfg.normalization.clip_D_gain_modification
+            self.actions[:,-2] = torch.clip(actions[..., -2], -clip_P_value, clip_P_value)
+            self.actions[:,-1] = torch.clip(actions[..., -1], -clip_D_value, clip_D_value)
+
+        #print(self.actions[27,-2:])   # We can print here the output of the neural network (the position of the 12 joints)
+
         # step physics and render each frame
         self.render()
         for _ in range(self.cfg.control.decimation):
-            print(self.torques.shape)
             self.torques = self._compute_torques(self.actions).view(self.torques.shape)
             self.gym.set_dof_actuation_force_tensor(self.sim, gymtorch.unwrap_tensor(self.torques))
             self.gym.simulate(self.sim)
@@ -571,27 +579,27 @@ class LeggedRobot(BaseTask):
         """
         #P PD controller is different depending on whether the last two elements of actions correspond to modifications
         #  to the P and D variables.
-        print("###################################################################")
-        if self.cfg.env.variable_PD:
-            joint_actions_scaled = actions[:, :-2]
+        joint_actions_scaled = actions[:, :self.num_dof] * self.cfg.control.action_scale
 
+        if self.cfg.env.variable_PD:
             # self.p_gains[:-2] is a 1D vector of length n_DOF. We want resulting p_gains to be a matrix of size
             # (batch_size, n_DOF). We are going to utilize broadcasting to achieve this. 
             modification_P = actions[:, -2] # (batch_size)
             modification_P = modification_P.view(len(modification_P), 1) # (batch_size, 1)
-            p_gains = self.p_gains[:-2] + modification_P # (batch_size, n_DOF)
+            p_gains = self.p_gains + modification_P # (batch_size, n_DOF)
 
             # Similar for d_gains
             modification_D = actions[:, -1] # (batch_size, )
             modification_D = modification_D.view(len(modification_D), 1) # (batch_size, 1)
-            d_gains = self.d_gains[:-2] + modification_D # (batch_size, n_DOF)    
+            d_gains = self.d_gains + modification_D # (batch_size, n_DOF)    
+
+            #print(p_gains[27,0])
+            #print(d_gains[27,0])
 
         else:
-            joint_actions_scaled = actions.detach().clone()  
             p_gains = self.p_gains # (n_DOF)
             d_gains = self.p_gains # (n_DOF)
 
-        joint_actions_scaled *= self.cfg.control.action_scale
         control_type = self.cfg.control.control_type
         if control_type=="P":
             torques = p_gains*(joint_actions_scaled + self.default_dof_pos - self.dof_pos) - d_gains*self.dof_vel
@@ -602,7 +610,6 @@ class LeggedRobot(BaseTask):
         else:
             raise NameError(f"Unknown controller type: {control_type}")
         
-        print(torques.shape)
         return torch.clip(torques, -self.torque_limits, self.torque_limits)
 
     def _reset_dofs(self, env_ids):
@@ -694,6 +701,7 @@ class LeggedRobot(BaseTask):
             [torch.Tensor]: Vector of scales used to multiply a uniform distribution in [-1, 1]
         """
         noise_vec = torch.zeros_like(self.obs_buf[0])
+        print(f"noise_vec.shape: {noise_vec.shape}")
         self.add_noise = self.cfg.noise.add_noise
         noise_scales = self.cfg.noise.noise_scales
         noise_level = self.cfg.noise.noise_level
@@ -703,11 +711,11 @@ class LeggedRobot(BaseTask):
         noise_vec[9:12] = 0. # commands
         noise_vec[12:24] = noise_scales.dof_pos * noise_level * self.obs_scales.dof_pos
         noise_vec[24:36] = noise_scales.dof_vel * noise_level * self.obs_scales.dof_vel
-        noise_vec[36:48] = 0. # previous actions the robot took
+        noise_vec[36:self.num_obs] = 0. # previous actions the robot took
 
-        i = 48
+        i = self.num_obs
         if self.cfg.terrain.measure_heights:
-            noise_vec[48:(48+self.num_height_points)] = noise_scales.height_measurements * noise_level * self.obs_scales.height_measurements
+            noise_vec[i:(i+self.num_height_points)] = noise_scales.height_measurements * noise_level * self.obs_scales.height_measurements
             i += self.num_height_points
         if self.cfg.contact_classification.enabled:
             noise_vec[i:(i+self.num_height_points)] = noise_scales.classification * noise_level * self.obs_scales.contacts_quality
@@ -725,7 +733,10 @@ class LeggedRobot(BaseTask):
         #       v_w_x, v_w_y, v_w_z [10:13]
         # (q0, q1, q2, q3) is the quaternion representing the orientation of the body
 
-        self.num_obs = 48 # will be increased below if measure_heights is True
+        if self.cfg.env.variable_PD:
+            self.num_obs = 48+2 # will be increased below if measure_heights is True
+        else:
+            self.num_obs = 48
 
         actor_root_state = self.gym.acquire_actor_root_state_tensor(self.sim)
         dof_state_tensor = self.gym.acquire_dof_state_tensor(self.sim)
@@ -752,9 +763,9 @@ class LeggedRobot(BaseTask):
         self.extras = { }
         self.gravity_vec = to_torch(get_axis_params(-1., self.up_axis_idx), device=self.device).repeat((self.num_envs, 1))
         self.forward_vec = to_torch([1., 0., 0.], device=self.device).repeat((self.num_envs, 1))
-        self.torques = torch.zeros(self.num_envs, self.num_actions, dtype=torch.float, device=self.device, requires_grad=False)
-        self.p_gains = torch.zeros(self.num_actions, dtype=torch.float, device=self.device, requires_grad=False)
-        self.d_gains = torch.zeros(self.num_actions, dtype=torch.float, device=self.device, requires_grad=False)
+        self.torques = torch.zeros(self.num_envs, self.num_dof, dtype=torch.float, device=self.device, requires_grad=False)
+        self.p_gains = torch.zeros(self.num_dof, dtype=torch.float, device=self.device, requires_grad=False)
+        self.d_gains = torch.zeros(self.num_dof, dtype=torch.float, device=self.device, requires_grad=False)
         self.actions = torch.zeros(self.num_envs, self.num_actions, dtype=torch.float, device=self.device, requires_grad=False)
         self.last_actions = torch.zeros(self.num_envs, self.num_actions, dtype=torch.float, device=self.device, requires_grad=False)
         self.last_dof_vel = torch.zeros_like(self.dof_vel)

@@ -55,7 +55,7 @@ class Solo12(LeggedRobot):
         super()._post_physics_step_callback()
        
     def _get_q_target(self, actions):
-        return self.cfg.control.action_scale * actions + self.default_dof_pos
+        return self.cfg.control.action_scale * actions[:,:self.num_dof] + self.default_dof_pos
      
     def _get_roll_pitch(self):
         roll, pitch, _ = get_euler_xyz(self.root_states[:, 3:7])
