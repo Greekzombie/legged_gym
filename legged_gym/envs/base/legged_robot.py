@@ -31,6 +31,7 @@
 from legged_gym import LEGGED_GYM_ROOT_DIR
 import numpy as np
 import os
+import time
 
 from isaacgym.torch_utils import *
 from isaacgym import gymtorch, gymapi, gymutil
@@ -108,6 +109,7 @@ class LeggedRobot(BaseTask):
         Args:
             actions (torch.Tensor): Tensor of shape (num_envs, num_actions_per_env)
         """
+        #print(actions[18])
         clip_actions = self.cfg.normalization.clip_actions
         self.actions[:,:self.num_dof] = torch.clip(actions[..., :self.num_dof], -clip_actions, clip_actions)
         
@@ -115,8 +117,11 @@ class LeggedRobot(BaseTask):
         if self.cfg.env.variable_PD:
             clip_P_value = self.cfg.normalization.clip_P_gain_modification
             clip_D_value = self.cfg.normalization.clip_D_gain_modification
-            self.actions[:,-2] = torch.clip(actions[..., -2], -clip_P_value, clip_P_value)
-            self.actions[:,-1] = torch.clip(actions[..., -1], -clip_D_value, clip_D_value)
+            #self.actions[:,-2] = torch.clip(actions[..., -2], -clip_P_value, clip_P_value) 
+            #self.actions[:,-1] = torch.clip(actions[..., -1], -clip_D_value, clip_D_value)
+
+            self.actions[:, -2] = torch.nn.functional.tanh(self.actions[:, -2] / 4) * clip_P_value
+            self.actions[:, -1] = torch.nn.functional.tanh(self.actions[:, -1] / 4) * clip_D_value
 
         #print(self.actions[27,-2:])   # We can print here the output of the neural network (the position of the 12 joints)
 
@@ -577,28 +582,27 @@ class LeggedRobot(BaseTask):
         Returns:
             [torch.Tensor]: Torques sent to the simulation
         """
-        #P PD controller is different depending on whether the last two elements of actions correspond to modifications
-        #  to the P and D variables.
         joint_actions_scaled = actions[:, :self.num_dof] * self.cfg.control.action_scale
 
+        #P PD controller is different depending on whether the last two elements of actions correspond to modifications
+        #  to the P and D variables.
         if self.cfg.env.variable_PD:
             # self.p_gains[:-2] is a 1D vector of length n_DOF. We want resulting p_gains to be a matrix of size
             # (batch_size, n_DOF). We are going to utilize broadcasting to achieve this. 
             modification_P = actions[:, -2] # (batch_size)
             modification_P = modification_P.view(len(modification_P), 1) # (batch_size, 1)
             p_gains = self.p_gains + modification_P # (batch_size, n_DOF)
+            #print(f"p_gains: {p_gains[19,0]}")
 
             # Similar for d_gains
             modification_D = actions[:, -1] # (batch_size, )
             modification_D = modification_D.view(len(modification_D), 1) # (batch_size, 1)
-            d_gains = self.d_gains + modification_D # (batch_size, n_DOF)    
-
-            #print(p_gains[27,0])
-            #print(d_gains[27,0])
+            d_gains = self.d_gains + modification_D # (batch_size, n_DOF) 
+            #print(f"d_gains: {d_gains[19,0]}")   
 
         else:
-            p_gains = self.p_gains # (n_DOF)
-            d_gains = self.p_gains # (n_DOF)
+            p_gains = self.p_gains.detach().clone() # (n_DOF)
+            d_gains = self.d_gains.detach().clone() # (n_DOF)
 
         control_type = self.cfg.control.control_type
         if control_type=="P":
@@ -609,7 +613,6 @@ class LeggedRobot(BaseTask):
             torques = joint_actions_scaled
         else:
             raise NameError(f"Unknown controller type: {control_type}")
-        
         return torch.clip(torques, -self.torque_limits, self.torque_limits)
 
     def _reset_dofs(self, env_ids):

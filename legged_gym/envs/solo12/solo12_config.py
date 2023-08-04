@@ -126,8 +126,8 @@ class Solo12Cfg( LeggedRobotCfg ):
                                 class Solo12(LeggedRobot):
             
             """
-            tracking_lin_vel = 20. # c_vel
-            tracking_ang_vel = 20.
+            tracking_lin_vel = 20 # c_vel
+            tracking_ang_vel = 20
             #go_to_spot = 50
             #exploration = 30
     
@@ -144,18 +144,18 @@ class Solo12Cfg( LeggedRobotCfg ):
             base_height = -2. 
             step_forecast = -0
 
+            torques = -0.01 
             termination = -1e3
-            #clear_gap = 40 
-            #feet_not_in_gap = -40
-            orientation = -10            # Penalize non flat base orientation
-            torques = -0.01  # maybe reduce this a bit more
-            smoothness_1_crossing_gap = -2.5
-            smoothness_2_crossing_gap = -1.5
+            #clear_gap = 20 
+            #feet_not_in_gap = -20
+            #orientation = -5          
+            #smoothness_1_crossing_gap = -2.5
+            #smoothness_2_crossing_gap = -1.5
 
             #P Added
-            torque_limits = -3
-            harsh_torque_limits = -50
-            feet_contact_forces = -1e3
+            torque_limits = -2
+            harsh_torque_limits = -20 * 2
+            #feet_contact_forces = -5e2
             #dof_acc = -1e-6
 
     class commands( LeggedRobotCfg.commands ):
@@ -217,7 +217,7 @@ class Solo12CfgPPO( LeggedRobotCfgPPO ):
         load_run = -1 # -1 = last run
         checkpoint = -1 # -1 = last saved model
         num_steps_per_env = 24
-        max_iterations = 20000   #P Max iterations. Might affect the curriculum.
+        max_iterations = 80000   #P Max iterations. Might affect the curriculum.
 
     class algorithm( LeggedRobotCfgPPO.algorithm ):
         learning_rate = Default() #0.005 #requested in the paper, but not working at all...

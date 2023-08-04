@@ -226,8 +226,8 @@ class LeggedRobotCfg(BaseConfig):
             feet_on_ground = 10
         clip_observations = 100.
         clip_actions = 100.
-        clip_P_gain_modification = 1.
-        clip_D_gain_modification = 0.2
+        clip_P_gain_modification = 2   #P
+        clip_D_gain_modification = 0.2 #P
         clip_measurements = 1.  #P Modified in solo12_config to 0.25
         
         _enforce_gait_profile = True # do not load from yaml
