@@ -109,7 +109,6 @@ class LeggedRobot(BaseTask):
         Args:
             actions (torch.Tensor): Tensor of shape (num_envs, num_actions_per_env)
         """
-        #print(actions[18])
         clip_actions = self.cfg.normalization.clip_actions
         self.actions[:,:self.num_dof] = torch.clip(actions[..., :self.num_dof], -clip_actions, clip_actions)
         
@@ -120,8 +119,8 @@ class LeggedRobot(BaseTask):
             #self.actions[:,-2] = torch.clip(actions[..., -2], -clip_P_value, clip_P_value) 
             #self.actions[:,-1] = torch.clip(actions[..., -1], -clip_D_value, clip_D_value)
 
-            self.actions[:, -2] = torch.nn.functional.tanh(self.actions[:, -2] / 4) * clip_P_value
-            self.actions[:, -1] = torch.nn.functional.tanh(self.actions[:, -1] / 4) * clip_D_value
+            self.actions[:, -2] = torch.nn.functional.tanh(actions[:, -2] / 4) * clip_P_value
+            self.actions[:, -1] = torch.nn.functional.tanh(actions[:, -1] / 4) * clip_D_value
 
         #print(self.actions[27,-2:])   # We can print here the output of the neural network (the position of the 12 joints)
 
@@ -592,13 +591,13 @@ class LeggedRobot(BaseTask):
             modification_P = actions[:, -2] # (batch_size)
             modification_P = modification_P.view(len(modification_P), 1) # (batch_size, 1)
             p_gains = self.p_gains + modification_P # (batch_size, n_DOF)
-            #print(f"p_gains: {p_gains[19,0]}")
+            print(f"p_gains: {p_gains[18,0]}")
 
             # Similar for d_gains
             modification_D = actions[:, -1] # (batch_size, )
             modification_D = modification_D.view(len(modification_D), 1) # (batch_size, 1)
             d_gains = self.d_gains + modification_D # (batch_size, n_DOF) 
-            #print(f"d_gains: {d_gains[19,0]}")   
+            print(f"d_gains: {d_gains[18,0]}")   
 
         else:
             p_gains = self.p_gains.detach().clone() # (n_DOF)
@@ -613,6 +612,7 @@ class LeggedRobot(BaseTask):
             torques = joint_actions_scaled
         else:
             raise NameError(f"Unknown controller type: {control_type}")
+        self.torques_not_clipped = torques.clone()
         return torch.clip(torques, -self.torque_limits, self.torque_limits)
 
     def _reset_dofs(self, env_ids):
@@ -767,6 +767,7 @@ class LeggedRobot(BaseTask):
         self.gravity_vec = to_torch(get_axis_params(-1., self.up_axis_idx), device=self.device).repeat((self.num_envs, 1))
         self.forward_vec = to_torch([1., 0., 0.], device=self.device).repeat((self.num_envs, 1))
         self.torques = torch.zeros(self.num_envs, self.num_dof, dtype=torch.float, device=self.device, requires_grad=False)
+        self.torques_not_clipped = torch.zeros(self.num_envs, self.num_dof, dtype=torch.float, device=self.device, requires_grad=False) #P
         self.p_gains = torch.zeros(self.num_dof, dtype=torch.float, device=self.device, requires_grad=False)
         self.d_gains = torch.zeros(self.num_dof, dtype=torch.float, device=self.device, requires_grad=False)
         self.actions = torch.zeros(self.num_envs, self.num_actions, dtype=torch.float, device=self.device, requires_grad=False)
@@ -1286,8 +1287,8 @@ class LeggedRobot(BaseTask):
         return torch.square(base_height - self.cfg.rewards.base_height_target)   #P Modified
     
     def _reward_torques(self):
-        # Penalize torques
-        return torch.sum(torch.square(self.torques), dim=1)
+        # Penalize torques   #P Will try this modification to only start heavility penalising when a torque is above 2
+        return torch.sum(torch.square(self.torques_not_clipped/1.5), dim=1)
 
     def _reward_dof_vel(self):
         # Penalize dof velocities
@@ -1322,7 +1323,7 @@ class LeggedRobot(BaseTask):
 
     def _reward_torque_limits(self):
         # penalize torques too close to the limit
-        return torch.sum((torch.abs(self.torques) - self.torque_limits*self.cfg.rewards.soft_torque_limit).clip(min=0.), dim=1)
+        return torch.sum((torch.abs(self.torques_not_clipped) - self.torque_limits*self.cfg.rewards.soft_torque_limit).clip(min=0.), dim=1)
 
     def _reward_tracking_lin_vel(self):
         # Tracking of linear velocity commands (xy axes)

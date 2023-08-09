@@ -283,7 +283,7 @@ class Solo12(LeggedRobot):
         """
         # Penalize torques too close to the limit
         harsh_torque_limit = 0.9
-        return torch.sum((torch.abs(self.torques) - self.torque_limits*harsh_torque_limit).clip(min=0.), dim=1)
+        return torch.sum((torch.abs(self.torques_not_clipped) - self.torque_limits*harsh_torque_limit).clip(min=0.), dim=1)
 
 
 

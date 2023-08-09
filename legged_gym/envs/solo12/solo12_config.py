@@ -95,8 +95,8 @@ class Solo12Cfg( LeggedRobotCfg ):
             Rewards with an associated negative scale are the ones subjected to a curriculum.
             """
             enabled = True     #P Let's see what happens if we turn curriculum off. #PP DON'T Things won't work well. 
-            delay = 500
-            duration = 3500
+            delay = 1000  #P OLD VALUE 500
+            duration = 4000 #P OLD VALUE 3500   
             interpolation = 1.5
 
         # you can use specific curriculum (even for positive rewards) this way:
@@ -128,23 +128,20 @@ class Solo12Cfg( LeggedRobotCfg ):
             """
             tracking_lin_vel = 20 # c_vel
             tracking_ang_vel = 20
-            #go_to_spot = 50
-            #exploration = 30
     
             foot_clearance = -20. # -c_clear -20
             foot_slip = -2. # -c_slip
             roll_pitch = -4. # -c_orn
-            #P vel_z = -2 # -c_vz
             joint_pose = -0.5 # -c_q
             power_loss = -0.1 # -c_E
-            smoothness_1 = -2.5 # -c_a1
-            smoothness_2 = -1.5 # -c_a2
+            smoothness_1 = -2.5/2 # -c_a1
+            smoothness_2 = -1.5/2 # -c_a2
 
             collision = -1.
             base_height = -2. 
             step_forecast = -0
 
-            torques = -0.01 
+            torques = -0.5      
             termination = -1e3
             #clear_gap = 20 
             #feet_not_in_gap = -20
@@ -153,8 +150,8 @@ class Solo12Cfg( LeggedRobotCfg ):
             #smoothness_2_crossing_gap = -1.5
 
             #P Added
-            torque_limits = -2
-            harsh_torque_limits = -20 * 2
+            torque_limits = -0.1             
+            harsh_torque_limits = -1   
             #feet_contact_forces = -5e2
             #dof_acc = -1e-6
 
@@ -217,7 +214,7 @@ class Solo12CfgPPO( LeggedRobotCfgPPO ):
         load_run = -1 # -1 = last run
         checkpoint = -1 # -1 = last saved model
         num_steps_per_env = 24
-        max_iterations = 80000   #P Max iterations. Might affect the curriculum.
+        max_iterations = 20000   #P Max iterations. Might affect the curriculum.
 
     class algorithm( LeggedRobotCfgPPO.algorithm ):
         learning_rate = Default() #0.005 #requested in the paper, but not working at all...
